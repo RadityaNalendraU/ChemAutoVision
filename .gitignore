@@ -13,6 +13,6 @@
 image_classifier
 image_regressor
 mlruns
-results
 data/images/
 models/
+results/
