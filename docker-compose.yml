@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+    volumes:
+      - .:/chemAutoVision
+    ports:
+      - "8890:8888"
+      - "5000:5000"
+    tty: true
+    shm_size: 16gb
+    ulimits:
+      nproc: 65535
+    stdin_open: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
