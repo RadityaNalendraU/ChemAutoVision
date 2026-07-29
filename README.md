@@ -62,6 +62,28 @@ docker exec -w /chemAutoVision/src [container_id] python3 generate_data.py --tas
 The generated dataset is saved to `/chemAutoVision/data`.
 And the generated skeletal formula images are saved `/chemAutoVision/data/images/[task_name]`
 
+## Data splitting strategy
+
+By default the dataset is split randomly (train/val/test = 64/16/20), which is the splitting used in the manuscript.
+
+A Chemprop-style balanced Bemis-Murcko scaffold split is also available via `--split_type balanced_scaffold`. It retains the manuscript's train/val/test ratio of 64/16/20 and assigns all molecules sharing the same scaffold to the same subset. `--split_seed` is required for a balanced scaffold split, and the split is reproducible for a given value.
+
+```
+docker exec -w /chemAutoVision/src [container_id] python3 generate_data.py --task_name [task name] --split_type balanced_scaffold --split_seed 1
+```
+
+The outputs include the scaffold method and seed so that they never overwrite random-split artifacts or another scaffold assignment:
+
+| Artifact | `--split_type random` (default) | `--split_type balanced_scaffold` |
+| --- | --- | --- |
+| Dataset | `/chemAutoVision/data/[task_name]_img.pkl` | `/chemAutoVision/data/balanced_scaffold_seed1_[task_name]_img.pkl` |
+| Split CSVs | `/chemAutoVision/data/{train,val,test}_[task_name]_img.csv` | `/chemAutoVision/data/{train,val,test}_balanced_scaffold_seed1_[task_name]_img.csv` |
+| Images | `/chemAutoVision/data/images/[task_name]` | `/chemAutoVision/data/images/balanced_scaffold_seed1_[task_name]` |
+
+The images are written to a separate directory because the image file names are derived from the post-split row index, which differs between the two strategies.
+
+When training a model on a balanced-scaffold dataset, pass the same `--split_type balanced_scaffold --split_seed 1` to the training scripts so that they load the corresponding dataset. Some scaffold distributions can make a requested fold empty; data generation fails early in that case instead of creating an unusable dataset. Seed `1` has been validated for FreeSolv.
+
 The datasets for CYP3A4 inhibition, hERG inhibition, and P-gp substrate prediction were obtained from [Han et al.](https://doi.org/10.1021/acs.jcim.4c02122). In the original study, the files labeled `valid` were used as external validation datasets. Therefore, these external datasets were excluded from the data used for model training and evaluation in this study. For each task, the corresponding `train` and `test` files were concatenated and used as the source dataset.
 
 # Model training

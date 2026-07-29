@@ -30,6 +30,11 @@ from modeling.modeling import (
 from recording.record_mlflow import record_exp_result
 import os
 from settings import IMG_SIZE, IS_DOWNSCALE_BEFORE_DAUG
+from utils.split import (
+    BALANCED_SCAFFOLD_SPLIT_TYPE,
+    make_split_prefix,
+    split_method_name,
+)
 from utils.utils import create_result_csv, list_gpu_names
 import json
 import os
@@ -134,6 +139,18 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", choices=["autokeras", "vgg16", "vgg19", "densenet121", "densenet201", "resnet18", "resnet50", "resnet152", "efficientnetb0", "convnextbase", "vit"], type=str, help="model_name")
     parser.add_argument('--execute_data_aug', action='store_true', help='execute data augmentation')
     parser.add_argument("--seed", type=int, default=99, help="seed")
+    parser.add_argument(
+        "--split_type",
+        choices=["random", BALANCED_SCAFFOLD_SPLIT_TYPE],
+        default="random",
+        help="data split strategy (generate_data.py と一致させる)",
+    )
+    parser.add_argument(
+        "--split_seed",
+        type=int,
+        default=None,
+        help="seed for balanced scaffold assignment (required for balanced_scaffold)",
+    )
 
     args = parser.parse_args()
     task_name = args.task_name
@@ -144,6 +161,14 @@ if __name__ == "__main__":
         raise ValueError(f"Invalid task name: {task_name}")
     
     data_path = DATA_PATHS[task_name]
+    split_prefix = make_split_prefix(args.split_type, args.split_seed)
+    split_method = split_method_name(args.split_type)
+    split_run_name = (
+        f"{split_method}_s{args.split_seed}"
+        if args.split_type == BALANCED_SCAFFOLD_SPLIT_TYPE
+        else split_method
+    )
+    data_path = data_path.replace("../data/", f"../data/{split_prefix}")
 
     train_ds, val_ds, test_ds = create_regression_img_data(
         data_path,
@@ -152,7 +177,8 @@ if __name__ == "__main__":
         IMG_SIZE
     )
 
-    save_model_path = f"../models/{task_name}_regression_{args.model_name}_{datetime.now().strftime('%Y%m%d%H%M%S')}.h5"
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    save_model_path = f"../models/{task_name}_regression_{args.model_name}_{split_run_name}_{timestamp}.h5"
     call_backs = create_callbacks()
     if args.model_name == "autokeras":
 
@@ -176,7 +202,7 @@ if __name__ == "__main__":
             inputs=input_node,
             outputs=output_node,
             overwrite=True,
-            directory=f"./auto_model/{task_name}_bs{args.batch_size}_seed{args.seed}",
+            directory=f"./auto_model/{task_name}_bs{args.batch_size}_seed{args.seed}_{split_run_name}",
             max_trials=args.max_trials,
             seed=args.seed,
         )
@@ -216,7 +242,7 @@ if __name__ == "__main__":
                         objective=LOSS,
                         max_trials=args.max_trials,
                         executions_per_trial=1,
-                        directory=f"keras_tuner/{task_name}_seed{args.seed}",
+                        directory=f"keras_tuner/{task_name}_seed{args.seed}_{split_run_name}",
                         project_name=f"{args.model_name}_bs{batch_size}_bayesian",
                         overwrite=True,
                         seed=args.seed
@@ -258,7 +284,7 @@ if __name__ == "__main__":
     training_time = time_training_end - time_training_start
     pred_time = time_pred_end - time_pred_start
 
-    result_csv_path = f"../results/{task_name}_regression_{args.model_name}_{datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+    result_csv_path = f"../results/{task_name}_regression_{args.model_name}_{split_run_name}_{timestamp}.csv"
     create_result_csv(result_csv_path, y_pred.flatten(), y_test)
 
     save_model(best_model, save_model_path)
@@ -304,6 +330,10 @@ if __name__ == "__main__":
             "target": task_name,
             "gpu_names": gpu_names,
             "csv_path": data_path,
+            "data_split": split_method,
+            "split_seed": args.split_seed
+            if args.split_type == BALANCED_SCAFFOLD_SPLIT_TYPE
+            else None,
             "ak_settings": ak_settings if args.model_name == "autokeras" else None,
             "model_name": args.model_name,
             "serch_ak_model": f"{ak_model_name}"

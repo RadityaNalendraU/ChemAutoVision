@@ -1,4 +1,4 @@
-SMILES,bioclass
+SMILES,CYP3A4
 Cn1c(-c2ccc3c(c2)OCO3)cc(=O)c2ccccc21,1
 COC(=O)Cn1c(C(=O)N(C)C)cc2c1C[C@H]1CN(C(=O)c3ccccc3)[C@@](Cc3ccc(OC)cc3)(C(=O)OC)[C@@H]21,1
 O=C(NCC1COc2ccccc2O1)C1CCN(S(=O)(=O)c2cccc3nsnc23)CC1,1
