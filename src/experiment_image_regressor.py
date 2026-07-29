@@ -331,7 +331,6 @@ if __name__ == "__main__":
             "gpu_names": gpu_names,
             "csv_path": data_path,
             "data_split": split_method,
-            "split_fracs": "0.64/0.16/0.20",
             "split_seed": args.split_seed
             if args.split_type == BALANCED_SCAFFOLD_SPLIT_TYPE
             else None,
