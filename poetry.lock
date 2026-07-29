@@ -2814,6 +2814,30 @@ numpy = "*"
 rich = "*"
 
 [[package]]
+name = "keras-cv"
+version = "0.9.0"
+description = "Industry-strength computer Vision extensions for Keras."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "keras_cv-0.9.0-py3-none-any.whl", hash = "sha256:507f0214cfba0a30e4c914d10bfac9b8ab39faeb30d4196993ddd02e31fccd7b"},
+    {file = "keras_cv-0.9.0.tar.gz", hash = "sha256:678e3447fdc0834d736b4bde8ef5950d53a1af4dd0c841f00edd8f8cd6e8e42f"},
+]
+
+[package.dependencies]
+absl-py = "*"
+kagglehub = "*"
+keras-core = "*"
+packaging = "*"
+regex = "*"
+tensorflow-datasets = "*"
+
+[package.extras]
+examples = ["matplotlib", "tensorflow-datasets"]
+tests = ["black[jupyter]", "flake8", "isort", "pycocotools", "pytest"]
+
+[[package]]
 name = "keras-nlp"
 version = "0.12.1"
 description = "Industry-strength Natural Language Processing extensions for Keras."
@@ -6647,6 +6671,7 @@ description = "TensorFlow is an open source machine learning framework for every
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "platform_system == \"Darwin\" and platform_machine == \"arm64\""
 markers = "platform_system == \"Darwin\" and platform_machine == \"arm64\""
 files = [
     {file = "tensorflow_macos-2.14.1-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:5b9832df0852fa534cbd3362b6e00ba1c9d4b541fdfd987d0bba3927229435bc"},

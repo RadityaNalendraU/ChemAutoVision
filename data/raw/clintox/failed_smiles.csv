@@ -1,0 +1,5 @@
+index,smiles
+7,[NH4][Pt]([NH4])(Cl)Cl
+302,c1ccc(cc1)n2c(=O)c(c(=O)n2c3ccccc3)CCS(=O)c4ccccc4
+1219,CCCCc1c(=O)n(n(c1=O)c2ccc(cc2)O)c3ccccc3
+1220,CCCCc1c(=O)n(n(c1=O)c2ccccc2)c3ccccc3

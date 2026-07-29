@@ -1,10 +1,12 @@
 import argparse
 import gc
 import time
+import sys
 from datetime import datetime
 from functools import partial
 
 import autokeras as ak
+import tensorflow_hub as hub
 import numpy as np
 import tensorflow as tf
 from seed import set_seeds
@@ -76,6 +78,7 @@ DATA_PATHS = {
     "ESOL": "../data/ESOL_img.pkl",
     "Lipo": "../data/Lipo_img.pkl",
     "FreeSolv": "../data/FreeSolv_img.pkl",
+"BACE": "../data/BACE_img.pkl",
 }
 
 def build_model_for_kerastuner(hp, is_execute_data_aug):
@@ -136,7 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_trials", type=int, default=50, help="autokeras maxtrials")
     parser.add_argument('--hp_tuning', choices=['keras_tuner'], help='Hyperparameter tuning method')
     parser.add_argument("--gpu", type=str, help="gpu")
-    parser.add_argument("--model_name", choices=["autokeras", "vgg16", "vgg19", "densenet121", "densenet201", "resnet18", "resnet50", "resnet152", "efficientnetb0", "convnextbase", "vit"], type=str, help="model_name")
+    parser.add_argument("--model_name", choices=["autokeras", "vgg16", "vgg19", "densenet121", "densenet201", "resnet18", "resnet50", "resnet152", "efficientnetb0", "convnextbase", "vit","vit_dryrun"], type=str, help="model_name")
     parser.add_argument('--execute_data_aug', action='store_true', help='execute data augmentation')
     parser.add_argument("--seed", type=int, default=99, help="seed")
     parser.add_argument(
@@ -180,8 +183,8 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     save_model_path = f"../models/{task_name}_regression_{args.model_name}_{split_run_name}_{timestamp}.h5"
     call_backs = create_callbacks()
-    if args.model_name == "autokeras":
 
+    if args.model_name == "autokeras":
         input_node = ak.ImageInput()
         x = input_node
 

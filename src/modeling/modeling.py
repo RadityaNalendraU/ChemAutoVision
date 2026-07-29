@@ -1,3 +1,4 @@
+import tensorflow_hub as hub
 import autokeras as ak
 from typing import List
 
@@ -288,20 +289,22 @@ def create_vgg19_model(
 
     return model
 
-def create_vit_model(
-    input_shape: tuple[int, int, int],
-    loss_alg: str,
-    metrics: List,
-    is_regression: bool,
-    patch_size: int = 32,
-    hidden_size: int = 768,
-    num_layers: int = 12,
-    num_heads: int = 12,
-    mlp_dim: int = 3072,
-    attention_do_rate: float = 0.1,
-    do_rate: float = 0.1,
-    representation_size: int = 0,
-) -> Model:
+def create_vit_model(input_shape=(256, 256, 3), loss_alg="mean_squared_error", metrics=None, is_regression=True):
+    inputs = tf.keras.Input(shape=input_shape)
+    
+    x = tf.keras.layers.Resizing(224, 224)(inputs)
+    x = tf.keras.layers.Rescaling(1./255)(x)
+    
+    vit_layer = hub.KerasLayer("https://tfhub.dev/sayakpaul/vit_b16_fe/1", trainable=False)
+    x = vit_layer(x)
+    
+    x = tf.keras.layers.Dense(256, activation="relu")(x)
+    x = tf.keras.layers.Dropout(0.2)(x)
+    
+    outputs = tf.keras.layers.Dense(1, name="predictions")(x)
+    
+    model = tf.keras.Model(inputs=inputs, outputs=outputs, name="ViT_ChemAutoVision")
+    return model
     """
     TensorFlow Model GardenのVision Transformerを使用してモデルを作成
     

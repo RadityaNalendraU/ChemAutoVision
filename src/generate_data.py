@@ -15,10 +15,14 @@ from seed import set_seeds
 from settings import IMG_SIZE, IS_DOWNSCALE_BEFORE_DAUG
 from utils.split import BALANCED_SCAFFOLD_SPLIT_TYPE, make_split_prefix
 
+# --- KONFIGURASI PATH CSV ---
 RAW_HERG_CSV_PATH = "../data/raw/hERG_inhibition/hERG.csv"
 RAW_CYP3A4_CSV_PATH = "../data/raw/CYP3A4_inhibition/CYP3A4.csv"
 RAW_PGP_CSV_PATH = "../data/raw/P-gp_substrate/P-gp.csv"
-CLASSIFICATION_TASKS = {"BBBP", "hERG", "P-gp", "CYP3A4"}
+RAW_BACE_CSV_PATH = "../data/raw/bace/bace.csv"
+RAW_CLINTOX_CSV_PATH = "../data/raw/clintox/clintox.csv.gz"
+RAW_SIDER_CSV_PATH = "../data/raw/sider/sider.csv.gz"
+RAW_TOX21_CSV_PATH = "../data/raw/tox21/tox21.csv.gz"
 
 
 def _generate_image(
@@ -39,9 +43,7 @@ def _generate_image(
         math.floor(IMG_SIZE[1] * downscale_ratio),
     )
 
-    img_output_dir = f"../data/images/{img_dir}"
-    os.makedirs(img_output_dir, exist_ok=True)
-    img_file_path = f"{img_output_dir}/{_df_row.idx}.png"
+    img_file_path = f"../data/images/{img_dir}/{_df_row.idx}.png"
 
     original_img = smi_to_img(
         _df_row.smiles,
@@ -71,12 +73,10 @@ def _exc_dup_mol(df: pd.DataFrame, task_name: str) -> pd.DataFrame:
             smiles_to_remove.add(smiles)
 
     if smiles_to_remove:
-        # Remove all rows with conflicting SMILES
         result_df = df[~df["smiles"].isin(smiles_to_remove)]
     else:
         result_df = df
 
-    # 目的変数の値が同一なのであれば、1件だけ残す
     result_df = result_df.drop_duplicates(subset=["smiles"], keep="first")
     return result_df
 
@@ -103,30 +103,39 @@ def _preprocess_smiles(smiles: str) -> str:
 
 def _load_data(task_name: str) -> pd.DataFrame:
     if task_name == "FreeSolv":
-        _, datasets, _ = dc.molnet.load_freesolv(
-            featurizer=dc.feat.RawFeaturizer(), split=None
-        )
+        _, datasets, _ = dc.molnet.load_freesolv(featurizer=dc.feat.RawFeaturizer(), split=None)
     elif task_name == "ESOL":
-        _, datasets, _ = dc.molnet.load_delaney(
-            featurizer=dc.feat.RawFeaturizer(), split=None
-        )
+        _, datasets, _ = dc.molnet.load_delaney(featurizer=dc.feat.RawFeaturizer(), split=None)
     elif task_name == "Lipo":
-        _, datasets, _ = dc.molnet.load_lipo(
-            featurizer=dc.feat.RawFeaturizer(), split=None
-        )
+        _, datasets, _ = dc.molnet.load_lipo(featurizer=dc.feat.RawFeaturizer(), split=None)
+    elif task_name == "BBBP":
+        _, datasets, _ = dc.molnet.load_bbbp(featurizer=dc.feat.RawFeaturizer(), split=None)
     elif task_name == "CYP3A4":
         datasets = pd.read_csv(RAW_CYP3A4_CSV_PATH)
     elif task_name == "P-gp":
         datasets = pd.read_csv(RAW_PGP_CSV_PATH)
     elif task_name == "hERG":
         datasets = pd.read_csv(RAW_HERG_CSV_PATH)
-    elif task_name == "BBBP":
-        _, datasets, _ = dc.molnet.load_bbbp(
-            featurizer=dc.feat.RawFeaturizer(), split=None
-        )
+    elif task_name == "hiv":
+        datasets = pd.read_csv(RAW_HIV_CSV_PATH)
+        
+    elif task_name == "BACE":
+        datasets = pd.read_csv(RAW_BACE_CSV_PATH)
+        # Ubah nama kolom target agar sesuai dengan task_name
+        datasets = datasets.rename(columns={"Class": task_name})
+    elif task_name == "ClinTox":
+        datasets = pd.read_csv(RAW_CLINTOX_CSV_PATH)
+        datasets = datasets.rename(columns={"FDA_APPROVED": task_name})
+    elif task_name == "SIDER":
+        datasets = pd.read_csv(RAW_SIDER_CSV_PATH)
+        datasets = datasets.rename(columns={"Hepatobiliary disorders": task_name})
+    elif task_name == "Tox21":
+        datasets = pd.read_csv(RAW_TOX21_CSV_PATH)
+        datasets = datasets.rename(columns={"SR-p53": task_name})
     else:
         raise ValueError("Invalid task name is input")
 
+    # Format output dari DeepChem
     if not isinstance(datasets, pd.DataFrame):
         datasets = pd.DataFrame(
             {"smiles": datasets[0].ids, task_name: datasets[0].y.flatten()}
@@ -291,6 +300,7 @@ if __name__ == "__main__":
     output_path = f"../data/{split_prefix}{task_name}_img.pkl"
 
     _df = _load_data(task_name)
+    _df = _df.dropna(subset=[task_name])
 
     # desalts
     _df["smiles"] = _df["smiles"].apply(_preprocess_smiles)

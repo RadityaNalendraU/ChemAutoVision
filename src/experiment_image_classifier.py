@@ -47,13 +47,19 @@ from utils.split import (
 from utils.utils import create_result_csv, list_gpu_names
 import os
 
+import tensorflow as tf
+
 EXP_ID = 570837897253197098
 
 DATA_PATHS = {
     "hERG": "../data/hERG_img.pkl",
     "BBBP": "../data/BBBP_img.pkl",
     "P-gp": "../data/P-gp_img.pkl",
-    "CYP3A4": "../data/CYP3A4_img.pkl"
+    "CYP3A4": "../data/CYP3A4_img.pkl",
+    "BACE": "../data/BACE_img.pkl",       
+    "ClinTox": "../data/ClinTox_img.pkl", 
+    "SIDER": "../data/SIDER_img.pkl",     
+    "Tox21": "../data/Tox21_img.pkl"
 }
 AK_SERCH_MODEL = None
 
