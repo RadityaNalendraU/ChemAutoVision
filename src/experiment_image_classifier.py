@@ -59,7 +59,10 @@ DATA_PATHS = {
     "BACE": "../data/BACE_img.pkl",       
     "ClinTox": "../data/ClinTox_img.pkl", 
     "SIDER": "../data/SIDER_img.pkl",     
-    "Tox21": "../data/Tox21_img.pkl"
+    "Tox21": "../data/Tox21_img.pkl",
+    "hiv": "../data/hiv_img.pkl",
+    "bbb": "../data/balanced_scaffold_seed99_bbb_img.pkl",
+    "Caco2": "../data/balanced_scaffold_seed99_Caco2_img.pkl"
 }
 AK_SERCH_MODEL = None
 

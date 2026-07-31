@@ -23,6 +23,12 @@ RAW_BACE_CSV_PATH = "../data/raw/bace/bace.csv"
 RAW_CLINTOX_CSV_PATH = "../data/raw/clintox/clintox.csv.gz"
 RAW_SIDER_CSV_PATH = "../data/raw/sider/sider.csv.gz"
 RAW_TOX21_CSV_PATH = "../data/raw/tox21/tox21.csv.gz"
+RAW_BBB_CSV_PATH = "../data/raw/bbb/bbb.csv"
+RAW_HIV_CSV_PATH = "../data/raw/hiv/hiv.csv"
+RAW_CACO2_CSV_PATH = "../data/raw/Caco2/Caco2.csv"
+RAW_RLM_CSV_PATH = "../data/raw/RLM/RLM.csv"
+RAW_HLM_CSV_PATH = "../data/raw/HLM/HLM.csv"
+
 
 
 def _generate_image(
@@ -116,12 +122,19 @@ def _load_data(task_name: str) -> pd.DataFrame:
         datasets = pd.read_csv(RAW_PGP_CSV_PATH)
     elif task_name == "hERG":
         datasets = pd.read_csv(RAW_HERG_CSV_PATH)
+
     elif task_name == "hiv":
         datasets = pd.read_csv(RAW_HIV_CSV_PATH)
-        
+    elif task_name == "bbb":
+        datasets = pd.read_csv(RAW_BBB_CSV_PATH)
+    elif task_name == "Caco2":
+        datasets = pd.read_csv(RAW_CACO2_CSV_PATH)
+    elif task_name == "RLM":
+        datasets = pd.read_csv(RAW_RLM_CSV_PATH)
+    elif task_name == "HLM":
+        datasets = pd.read_csv(RAW_HLM_CSV_PATH)
     elif task_name == "BACE":
         datasets = pd.read_csv(RAW_BACE_CSV_PATH)
-        # Ubah nama kolom target agar sesuai dengan task_name
         datasets = datasets.rename(columns={"Class": task_name})
     elif task_name == "ClinTox":
         datasets = pd.read_csv(RAW_CLINTOX_CSV_PATH)
@@ -176,9 +189,16 @@ def _split_data_balanced_scaffold(
 
     scaffold_to_indices: dict[str, set[int]] = {}
     for index, smiles in enumerate(df["smiles"]):
-        scaffold = MurckoScaffold.MurckoScaffoldSmiles(
-            smiles=smiles, includeChirality=False
-        )
+        try:
+            scaffold = MurckoScaffold.MurckoScaffoldSmiles(
+                smiles=smiles, includeChirality=False
+            )
+        except Exception:
+            # If RDKit fails to generate a scaffold because the molecular structure is invalid
+            # (e.g., due to a valence error), use the original SMILES string as a fallback
+            # scaffold to prevent the process from crashing.
+            scaffold = smiles
+            
         scaffold_to_indices.setdefault(scaffold, set()).add(index)
 
     train_size = frac_train * len(df)
@@ -240,7 +260,7 @@ def _validate_split(df: pd.DataFrame, task_name: str) -> None:
         raise ValueError(f"split produced missing folds: {counts.to_dict()}")
 
     print(f"Split sizes: {counts.to_dict()}")
-    if task_name in CLASSIFICATION_TASKS:
+    if task_name in ["BBBP", "P-gp", "CYP3A4", "hERG", "BACE", "ClinTox", "SIDER", "Tox21", "HIV", "bbb"]:
         class_counts = pd.crosstab(df["group"], df[task_name])
         print(f"Class distribution:\n{class_counts}")
         for group in ("train", "val", "test"):

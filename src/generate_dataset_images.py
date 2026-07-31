@@ -6,19 +6,26 @@ from rdkit.Chem import Draw
 
 # Konfigurasi Kolom Dataset Drug-Based (Tanpa BBBP)
 DATASETS = {
-    "clintox": {"smiles_col": "smiles", "target_col": "FDA_APPROVED"},
-    "sider": {"smiles_col": "smiles", "target_col": "Hepatobiliary disorders"},
-    "tox21": {"smiles_col": "smiles", "target_col": "SR-p53"},
-    "bace": {"smiles_col": "mol", "target_col": "Class"}
+    # "clintox": {"smiles_col": "smiles", "target_col": "FDA_APPROVED"},
+    # "sider": {"smiles_col": "smiles", "target_col": "Hepatobiliary disorders"},
+    # "tox21": {"smiles_col": "smiles", "target_col": "SR-p53"},
+    # "bace": {"smiles_col": "mol", "target_col": "Class"},
+    # "bbb": {"smiles_col": "smiles", "target_col": "bbb"},
+    # "Caco2": {"smiles_col": "smiles", "target_col": "Caco2"},
+    "RLM": {"smiles_col": "smiles", "target_col": "RLM"},
+    "HLM": {"smiles_col": "smiles", "target_col": "HLM"}
 }
 
 ROOT_DIR = "/chemAutoVision"
 
 def render_images():
-    print("=== MEMULAI PROSES RENDER GAMBAR DRUG-BASED ===")
+    print("=== MEMULAI PROSES RENDER GAMBAR DRUG ===")
     for data_name, config in DATASETS.items():
         raw_dir = os.path.join(ROOT_DIR, "data", "raw", data_name)
-        image_dir = os.path.join(ROOT_DIR, "data", "images", data_name)
+        
+        # PERUBAHAN DISINI: Format nama folder tujuan diubah sesuai permintaan
+        folder_name = f"balanced_scaffold_seed99_{data_name}"
+        image_dir = os.path.join(ROOT_DIR, "data", "images", folder_name)
         
         csv_path_gz = os.path.join(raw_dir, f"{data_name}.csv.gz")
         csv_path_normal = os.path.join(raw_dir, f"{data_name}.csv")
@@ -44,7 +51,7 @@ def render_images():
         for idx, row in tqdm(df.iterrows(), total=len(df), desc=f"Rendering {data_name}"):
             try:
                 smiles = str(row[smiles_col])
-                img_name = f"{data_name}_{idx}.png"
+                img_name = f"{idx}.png"
                 img_path = os.path.join(image_dir, img_name)
                 
                 if os.path.exists(img_path):
